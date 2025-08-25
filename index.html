@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>客人回饋｜靜態範本</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#ffffff; --text:#1f2937; --muted:#6b7280; --brand:#2563eb; --chip:#eef2ff; --line:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,\"Noto Sans TC\",\"PingFang TC\",\"Microsoft JhengHei\",sans-serif;background:var(--bg);color:var(--text);}
+    .wrap{max-width:980px;margin:0 auto;padding:20px;}
+    header h1{margin:0 0 10px;font-weight:800;letter-spacing:.5px}
+    header .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+
+    /* 控制列 */
+    .controls{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0 18px}
+    @media(min-width:720px){.controls{grid-template-columns:1.2fr .9fr .9fr .9fr .8fr .6fr}}
+    .control{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 10px;border-radius:12px}
+    .control input,.control select{width:100%;border:none;outline:none;background:transparent;font-size:14px}
+    .control label{font-size:12px;color:var(--muted);white-space:nowrap}
+    .toggle{display:flex;align-items:center;gap:8px;justify-content:center}
+
+    /* 卡片 */
+    .list{display:flex;flex-direction:column;gap:12px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;box-shadow:0 1px 1px rgba(0,0,0,.03)}
+    .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .name{font-weight:700}
+    .meta{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:13px}
+    .loc{background:var(--chip);color:#4f46e5;border:1px solid #e0e7ff;padding:3px 8px;border-radius:999px;font-size:12px}
+    .content{margin-top:8px;line-height:1.6;white-space:pre-wrap}
+    .tools{display:flex;gap:10px;margin-top:8px}
+    .btn-link{border:none;background:transparent;color:var(--brand);padding:0;font-size:13px;cursor:pointer}
+    .divider{height:1px;background:var(--line);margin:10px 0 6px}
+
+    /* 壓縮模式 */
+    .compact .card{padding:10px}
+    .compact .content{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+    /* 空狀態 */
+    .empty{border:2px dashed var(--line);border-radius:16px;padding:24px;text-align:center;color:var(--muted)}
+
+    /* 置底工具列 */
+    .footer-tools{position:sticky;bottom:16px;display:flex;justify-content:flex-end}
+    .floating{background:var(--brand);color:#fff;border:none;border-radius:20px;padding:8px 12px;cursor:pointer;box-shadow:0 6px 20px rgba(37,99,235,.3);}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>客人回饋</h1>
+      <div class="sub">靜態版面｜可直接編輯下方 FEEDBACKS 陣列新增/移除資料</div>
+
+      <div class="controls">
+        <div class="control">
+          <label for="q">搜尋</label>
+          <input id="q" placeholder="姓名 / 地點 / 內容關鍵字" />
+        </div>
+        <div class="control">
+          <label for="place">地點</label>
+          <select id="place"><option value="">全部地點</option></select>
+        </div>
+        <div class="control">
+          <label for="from">起日</label>
+          <input id="from" type="date" />
+        </div>
+        <div class="control">
+          <label for="to">迄日</label>
+          <input id="to" type="date" />
+        </div>
+        <div class="control">
+          <label for="sort">排序</label>
+          <select id="sort">
+            <option value="newest">最新在前</option>
+            <option value="oldest">最舊在前</option>
+            <option value="nameAZ">姓名 A→Z</option>
+            <option value="nameZA">姓名 Z→A</option>
+          </select>
+        </div>
+        <div class="control toggle">
+          <input id="compact" type="checkbox" />
+          <label for="compact">壓縮顯示</label>
+        </div>
+      </div>
+    </header>
+
+    <div id="list" class="list" aria-live="polite"></div>
+    <div id="empty" class="empty" style="display:none">沒有符合條件的回饋。</div>
+
+    <div class="footer-tools">
+      <button class="floating" id="copyTemplate">複製資料模板</button>
+    </div>
+  </div>
+
+  <script>
+    // ==============================
+    // 1) 編輯這裡：客人回饋資料
+    // 每筆格式：{ id, name, time, place, content }
+    // time 請用 ISO 8601 或 \"YYYY-MM-DD HH:mm\"（將以本地時區顯示）
+    // ==============================
+    const FEEDBACKS = [
+      { id: 1, name: "陳小姐", time: "2025-08-20 18:32", place: "老新台菜—A館", content: "第一次來用餐，服務生很親切，菜色也很有水準。椒麻雞超推！" },
+      { id: 2, name: "David", time: "2025-08-22T12:05:00", place: "老新台菜—B館", content: "家庭聚餐座位安排很舒服，小孩有空間活動。蝦鬆很好吃，下次還會再來。" },
+      { id: 3, name: "王先生", time: "2025-08-23 19:10", place: "老新台菜—外帶", content: "外帶速度快，餐點保溫做得不錯；建議紙袋底部再厚一些。" },
+      { id: 4, name: "林太太", time: "2025-08-24 13:45", place: "老新台菜—A館", content: "包廂燈光稍暗，但私密感很棒。喜歡你們的紅燒牛腩與豬腳。" },
+    ];
+
+    // （選用）如需改為外部 JSON，將下方 loadMode 設定為 'remote'，並把 remoteUrl 改成你的 JSON 檔位置。
+    // JSON 結構需為陣列（同 FEEDBACKS 格式）。GitHub Pages 也可。
+    const loadMode = 'remote'; // 'local' | 'remote'
+    const remoteUrl = './feedbacks.json';
+
+    // ==============================
+    // 2) 主程式：渲染、篩選、排序、展開/收合
+    // ==============================
+    const $list  = document.getElementById('list');
+    const $empty = document.getElementById('empty');
+    const $q     = document.getElementById('q');
+    const $place = document.getElementById('place');
+    const $from  = document.getElementById('from');
+    const $to    = document.getElementById('to');
+    const $sort  = document.getElementById('sort');
+    const $compact = document.getElementById('compact');
+
+    let DATA = [];
+
+    function parseTime(t){
+      // 支援 \"YYYY-MM-DD HH:mm\" 或 ISO
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(t)){
+        const [d, hm] = t.split(' ');
+        return new Date(d+"T"+hm+":00");
+      }
+      return new Date(t);
+    }
+    function fmt(dt){
+      if (!(dt instanceof Date) || isNaN(dt)) return '';
+      const pad = n => String(n).padStart(2,'0');
+      return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    }
+
+    function uniquePlaces(list){
+      return Array.from(new Set(list.map(x=>x.place).filter(Boolean)));
+    }
+
+    function populatePlaceFilter(list){
+      const places = uniquePlaces(list);
+      const cur = $place.value;
+      $place.innerHTML = '<option value="">全部地點</option>' + places.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+      if (places.includes(cur)) $place.value = cur; // 保留選項
+    }
+
+    function escapeHtml(s){
+      return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+    }
+
+    function inRange(date, from, to){
+      if (from && date < from) return false;
+      if (to){
+        // 包含當天：to 的 23:59:59
+        const end = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23,59,59,999);
+        if (date > end) return false;
+      }
+      return true;
+    }
+
+    function filterAndSort(){
+      const kw = $q.value.trim().toLowerCase();
+      const place = $place.value;
+      const from = $from.value ? new Date($from.value) : null;
+      const to   = $to.value   ? new Date($to.value)   : null;
+      const sort = $sort.value;
+
+      let list = DATA.filter(x=>{
+        const text = `${x.name} ${x.place} ${x.content}`.toLowerCase();
+        const hitKw = !kw || text.includes(kw);
+        const hitPl = !place || x.place === place;
+        const dt = parseTime(x.time);
+        const hitDate = inRange(dt, from, to);
+        return hitKw && hitPl && hitDate;
+      });
+
+      list.sort((a,b)=>{
+        if (sort === 'newest') return parseTime(b.time) - parseTime(a.time);
+        if (sort === 'oldest') return parseTime(a.time) - parseTime(b.time);
+        if (sort === 'nameAZ') return a.name.localeCompare(b.name,'zh-Hant');
+        if (sort === 'nameZA') return b.name.localeCompare(a.name,'zh-Hant');
+        return 0;
+      });
+      return list;
+    }
+
+    function render(){
+      const list = filterAndSort();
+      $list.classList.toggle('compact', $compact.checked);
+
+      if (list.length === 0){
+        $list.innerHTML = '';
+        $empty.style.display = '';
+        return;
+      }
+      $empty.style.display = 'none';
+      $list.innerHTML = list.map(item=>{
+        const dt = parseTime(item.time);
+        return `<article class=\"card\" id=\"f-${item.id}\" aria-label=\"${escapeHtml(item.name)} 的回饋\">\n          <div class=\"head\">\n            <div class=\"name\">${escapeHtml(item.name)}</div>\n            <div class=\"meta\">\n              <span title=\"時間\">${fmt(dt)}</span>\n              ${item.place?`<span class=\"loc\" title=\"地點\">${escapeHtml(item.place)}</span>`:''}\n            </div>\n          </div>\n          <div class=\"divider\"></div>\n          <div class=\"content\" data-full=\"${escapeHtml(item.content)}\">${escapeHtml(item.content)}</div>\n          <div class=\"tools\">\n            <button class=\"btn-link\" data-act=\"toggle\">展開/收合</button>\n            <a class=\"btn-link\" href=\"#f-${item.id}\">連結</a>\n          </div>\n        </article>`
+      }).join('');
+    }
+
+    function onListClick(e){
+      const btn = e.target.closest('[data-act=toggle]');
+      if (!btn) return;
+      const card = e.target.closest('.card');
+      const content = card.querySelector('.content');
+      // 簡單的展開/收合：切換 line-clamp
+      if ($list.classList.contains('compact')){
+        // 若在壓縮模式，先暫時移除整體壓縮效果，並只對此卡片展開（以內聯 style 控制）
+        content.style.display = content.style.display === 'block' ? '' : 'block';
+      }else{
+        if (content.style.display === '-webkit-box'){
+          content.style.display = '';
+        }else{
+          content.style.display = '-webkit-box';
+          content.style.webkitLineClamp = '4';
+          content.style.webkitBoxOrient = 'vertical';
+          content.style.overflow = 'hidden';
+        }
+      }
+    }
+
+    function attachEvents(){
+      [$q,$place,$from,$to,$sort,$compact].forEach(el=> el.addEventListener('input', render));
+      $list.addEventListener('click', onListClick);
+      document.getElementById('copyTemplate').addEventListener('click', ()=>{
+        const tpl = `[{\n  \"id\": 1,\n  \"name\": \"姓名\",\n  \"time\": \"2025-08-25 12:00\",\n  \"place\": \"地點\",\n  \"content\": \"留言內容\"\n}]`;
+        navigator.clipboard?.writeText(tpl).then(()=>{
+          alert('已複製 JSON 資料模板，可貼到你的 feedbacks.json 或直接覆蓋 FEEDBACKS。');
+        }).catch(()=>{
+          alert('瀏覽器不支援自動複製，請手動選取。\n\n' + tpl);
+        });
+      });
+    }
+
+    async function loadData(){
+      if (loadMode === 'local'){
+        DATA = FEEDBACKS.slice();
+        afterLoad();
+      }else{
+        try{
+          const res = await fetch(remoteUrl, {cache:'no-store'});
+          DATA = await res.json();
+          afterLoad();
+        }catch(err){
+          console.error(err);
+          DATA = FEEDBACKS.slice();
+          afterLoad();
+        }
+      }
+    }
+
+    function afterLoad(){
+      // 正規化：確保 id、time 皆存在
+      DATA = DATA.map((x,i)=>({
+        id: x.id ?? (i+1),
+        name: x.name ?? '訪客',
+        time: x.time ?? new Date().toISOString(),
+        place: x.place ?? '',
+        content: x.content ?? ''
+      }));
+      populatePlaceFilter(DATA);
+      render();
+    }
+
+    // 初始化
+    attachEvents();
+    loadData();
+  </script>
+</body>
+</html>
