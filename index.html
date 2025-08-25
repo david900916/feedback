@@ -41,10 +41,6 @@
 
     /* 空狀態 */
     .empty{border:2px dashed var(--line);border-radius:16px;padding:24px;text-align:center;color:var(--muted)}
-
-    /* 置底工具列 */
-    .footer-tools{position:sticky;bottom:16px;display:flex;justify-content:flex-end}
-    .floating{background:var(--brand);color:#fff;border:none;border-radius:20px;padding:8px 12px;cursor:pointer;box-shadow:0 6px 20px rgba(37,99,235,.3);}
   </style>
 </head>
 <body>
@@ -88,18 +84,9 @@
 
     <div id="list" class="list" aria-live="polite"></div>
     <div id="empty" class="empty" style="display:none">沒有符合條件的回饋。</div>
-
-    <div class="footer-tools">
-      <button class="floating" id="copyTemplate">複製資料模板</button>
-    </div>
   </div>
 
   <script>
-    // ==============================
-    // 1) 編輯這裡：客人回饋資料
-    // 每筆格式：{ id, name, time, place, content }
-    // time 請用 ISO 8601 或 \"YYYY-MM-DD HH:mm\"（將以本地時區顯示）
-    // ==============================
     const FEEDBACKS = [
       { id: 1, name: "陳小姐", time: "2025-08-20 18:32", place: "老新台菜—A館", content: "第一次來用餐，服務生很親切，菜色也很有水準。椒麻雞超推！" },
       { id: 2, name: "David", time: "2025-08-22T12:05:00", place: "老新台菜—B館", content: "家庭聚餐座位安排很舒服，小孩有空間活動。蝦鬆很好吃，下次還會再來。" },
@@ -107,14 +94,9 @@
       { id: 4, name: "林太太", time: "2025-08-24 13:45", place: "老新台菜—A館", content: "包廂燈光稍暗，但私密感很棒。喜歡你們的紅燒牛腩與豬腳。" },
     ];
 
-    // （選用）如需改為外部 JSON，將下方 loadMode 設定為 'remote'，並把 remoteUrl 改成你的 JSON 檔位置。
-    // JSON 結構需為陣列（同 FEEDBACKS 格式）。GitHub Pages 也可。
-    const loadMode = 'remote'; // 'local' | 'remote'
+    const loadMode = 'local'; // 'local' | 'remote'
     const remoteUrl = './feedbacks.json';
 
-    // ==============================
-    // 2) 主程式：渲染、篩選、排序、展開/收合
-    // ==============================
     const $list  = document.getElementById('list');
     const $empty = document.getElementById('empty');
     const $q     = document.getElementById('q');
@@ -127,7 +109,6 @@
     let DATA = [];
 
     function parseTime(t){
-      // 支援 \"YYYY-MM-DD HH:mm\" 或 ISO
       if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(t)){
         const [d, hm] = t.split(' ');
         return new Date(d+"T"+hm+":00");
@@ -148,7 +129,7 @@
       const places = uniquePlaces(list);
       const cur = $place.value;
       $place.innerHTML = '<option value="">全部地點</option>' + places.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
-      if (places.includes(cur)) $place.value = cur; // 保留選項
+      if (places.includes(cur)) $place.value = cur;
     }
 
     function escapeHtml(s){
@@ -158,7 +139,6 @@
     function inRange(date, from, to){
       if (from && date < from) return false;
       if (to){
-        // 包含當天：to 的 23:59:59
         const end = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23,59,59,999);
         if (date > end) return false;
       }
@@ -212,9 +192,7 @@
       if (!btn) return;
       const card = e.target.closest('.card');
       const content = card.querySelector('.content');
-      // 簡單的展開/收合：切換 line-clamp
       if ($list.classList.contains('compact')){
-        // 若在壓縮模式，先暫時移除整體壓縮效果，並只對此卡片展開（以內聯 style 控制）
         content.style.display = content.style.display === 'block' ? '' : 'block';
       }else{
         if (content.style.display === '-webkit-box'){
@@ -231,14 +209,6 @@
     function attachEvents(){
       [$q,$place,$from,$to,$sort,$compact].forEach(el=> el.addEventListener('input', render));
       $list.addEventListener('click', onListClick);
-      document.getElementById('copyTemplate').addEventListener('click', ()=>{
-        const tpl = `[{\n  \"id\": 1,\n  \"name\": \"姓名\",\n  \"time\": \"2025-08-25 12:00\",\n  \"place\": \"地點\",\n  \"content\": \"留言內容\"\n}]`;
-        navigator.clipboard?.writeText(tpl).then(()=>{
-          alert('已複製 JSON 資料模板，可貼到你的 feedbacks.json 或直接覆蓋 FEEDBACKS。');
-        }).catch(()=>{
-          alert('瀏覽器不支援自動複製，請手動選取。\n\n' + tpl);
-        });
-      });
     }
 
     async function loadData(){
@@ -259,7 +229,6 @@
     }
 
     function afterLoad(){
-      // 正規化：確保 id、time 皆存在
       DATA = DATA.map((x,i)=>({
         id: x.id ?? (i+1),
         name: x.name ?? '訪客',
@@ -271,7 +240,6 @@
       render();
     }
 
-    // 初始化
     attachEvents();
     loadData();
   </script>
