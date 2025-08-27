@@ -3,27 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>客人回饋｜靜態範本</title>
+  <title>客人回饋｜靜態顯示</title>
   <style>
     :root{
       --bg:#f6f7fb; --card:#ffffff; --text:#1f2937; --muted:#6b7280; --brand:#2563eb; --chip:#eef2ff; --line:#e5e7eb;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,\"Noto Sans TC\",\"PingFang TC\",\"Microsoft JhengHei\",sans-serif;background:var(--bg);color:var(--text);}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text);}
     .wrap{max-width:980px;margin:0 auto;padding:20px;}
     header h1{margin:0 0 10px;font-weight:800;letter-spacing:.5px}
     header .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
 
-    /* 控制列 */
+    /* 控制列（僅瀏覽用） */
     .controls{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0 18px}
-    @media(min-width:720px){.controls{grid-template-columns:1.2fr .9fr .9fr .9fr .8fr .6fr}}
+    @media(min-width:920px){.controls{grid-template-columns:1.2fr .9fr .9fr .9fr .8fr .6fr}}
     .control{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 10px;border-radius:12px}
     .control input,.control select{width:100%;border:none;outline:none;background:transparent;font-size:14px}
     .control label{font-size:12px;color:var(--muted);white-space:nowrap}
     .toggle{display:flex;align-items:center;gap:8px;justify-content:center}
 
-    /* 卡片 */
+    /* 列表卡片 */
     .list{display:flex;flex-direction:column;gap:12px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;box-shadow:0 1px 1px rgba(0,0,0,.03)}
     .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -47,7 +47,7 @@
   <div class="wrap">
     <header>
       <h1>客人回饋</h1>
-      <div class="sub">靜態版面｜可直接編輯下方 FEEDBACKS 陣列新增/移除資料</div>
+      <div class="sub">純靜態顯示｜你只需在程式碼上方的資料區塊新增評論（提供兩種格式）</div>
 
       <div class="controls">
         <div class="control">
@@ -87,18 +87,52 @@
   </div>
 
   <script>
-    const FEEDBACKS = [
-      
-{ id: 1, name: "陳小姐", time: "2025-08-20 18:32", place: "老新台菜—A館", content: "第一次來用餐，服務生很親切，菜色也很有水準。椒麻雞超推！" },
-      { id: 2, name: "David", time: "2025-08-22T12:05:00", place: "老新台菜—B館", content: "家庭聚餐座位安排很舒服，小孩有空間活動。蝦鬆很好吃，下次還會再來。" },
-      { id: 3, name: "王先生", time: "2025-08-23 19:10", place: "老新台菜—外帶", content: "外帶速度快，餐點保溫做得不錯；建議紙袋底部再厚一些。" },
-      { id: 4, name: "林太太", time: "2025-08-24 13:45", place: "老新台菜—A館", content: "包廂燈光稍暗，但私密感很棒。喜歡你們的紅燒牛腩與豬腳。" },
+    // ==============================
+    // 🔧 你只要改這一段（三選一）
+    // 1) 使用 FEEDBACKS 陣列（最直覺）：將每筆以物件寫入
+    // 2) 使用 SOURCE_BLOCK 純文字（像貼 Google 評論）：每筆間空一行或用 --- 分隔
+    // 3) 使用遠端 JSON：把 DATA_MODE 改成 'remote'，並設定 remoteUrl
+    // ==============================
 
+    const DATA_MODE = 'array'; // 'array' | 'block' | 'remote'
+
+    // [選項 1] 以「陣列」新增（推薦）：
+    // 範例：
+    // { id: 1, name: '王小明', time: '2025-08-25 14:30', place: '老新台菜 A館', content: '餐點好吃，服務很貼心。' }
+    const FEEDBACKS = [
+      { id: 1, name: '陳小姐', time: '2025-08-20 18:32', place: '老新台菜—A館', content: '第一次來用餐，服務生很親切，菜色也很有水準。椒麻雞超推！' },
+      { id: 2, name: 'David', time: '2025-08-22T12:05:00', place: '老新台菜—B館', content: '家庭聚餐座位安排很舒服，小孩有空間活動。蝦鬆很好吃，下次還會再來。' },
+      { id: 3, name: '王先生', time: '2025-08-23 19:10', place: '老新台菜—外帶', content: '外帶速度快，餐點保溫做得不錯；建議紙袋底部再厚一些。' },
+      { id: 4, name: '林太太', time: '2025-08-24 13:45', place: '老新台菜—A館', content: '包廂燈光稍暗，但私密感很棒。喜歡你們的紅燒牛腩與豬腳。' },
     ];
 
-    const loadMode = 'local'; // 'local' | 'remote'
+    // [選項 2] 以「純文字」新增（像 Google 評論那樣黏貼）：
+    // 允許 3 種格式（每筆間請空一行或用 --- 分隔）：
+    //  A) 內容\n姓名｜YYYY-MM-DD HH:mm｜地點
+    //  B) 內容\n姓名｜YYYY-MM-DD HH:mm
+    //  C) 內容\n姓名\nYYYY-MM-DD HH:mm\n地點(可省略)
+    const SOURCE_BLOCK = `
+外帶速度快，餐點保溫做得不錯；建議紙袋底部再厚一些。
+王先生｜2025-08-23 19:10｜老新台菜—外帶
+
+第一次來用餐，服務生很親切，菜色也很有水準。椒麻雞超推！
+陳小姐｜2025-08-20 18:32｜老新台菜—A館
+
+家庭聚餐座位安排很舒服，小孩有空間活動。蝦鬆很好吃，下次還會再來。
+David｜2025-08-22 12:05
+---
+包廂燈光稍暗，但私密感很棒。喜歡你們的紅燒牛腩與豬腳。
+林太太
+2025-08-24 13:45
+老新台菜—A館
+`;
+
+    // [選項 3] 遠端 JSON（維持純靜態、方便批次更新）：
     const remoteUrl = './feedbacks.json';
 
+    // ==============================
+    // 主程式（只負責顯示）
+    // ==============================
     const $list  = document.getElementById('list');
     const $empty = document.getElementById('empty');
     const $q     = document.getElementById('q');
@@ -111,6 +145,7 @@
     let DATA = [];
 
     function parseTime(t){
+      if (!t) return new Date();
       if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(t)){
         const [d, hm] = t.split(' ');
         return new Date(d+"T"+hm+":00");
@@ -126,18 +161,15 @@
     function uniquePlaces(list){
       return Array.from(new Set(list.map(x=>x.place).filter(Boolean)));
     }
-
     function populatePlaceFilter(list){
       const places = uniquePlaces(list);
       const cur = $place.value;
       $place.innerHTML = '<option value="">全部地點</option>' + places.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
       if (places.includes(cur)) $place.value = cur;
     }
-
     function escapeHtml(s){
       return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
     }
-
     function inRange(date, from, to){
       if (from && date < from) return false;
       if (to){
@@ -213,22 +245,44 @@
       $list.addEventListener('click', onListClick);
     }
 
-    async function loadData(){
-      if (loadMode === 'local'){
-        DATA = FEEDBACKS.slice();
-        afterLoad();
-      }else{
-        try{
-          const res = await fetch(remoteUrl, {cache:'no-store'});
-          DATA = await res.json();
-          afterLoad();
-        }catch(err){
-          console.error(err);
-          DATA = FEEDBACKS.slice();
-          afterLoad();
+    function parseBlock(text){
+      const blocks = text.split(/\n\s*(?:---|\n)\s*\n/).map(s=>s.trim()).filter(Boolean);
+      const out = [];
+      let autoId = 1;
+      for (const b of blocks){
+        const lines = b.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+        if (lines.length===0) continue;
+        const content = lines[0];
+        let name='', time='', place='';
+        if (lines[1]){
+          const parts = lines[1].split(/\s*[|｜]\s*/);
+          if (parts.length>=2){
+            [name,time,place] = parts;
+          }else{
+            name = lines[1] || '';
+            time = lines[2] || '';
+            place = lines[3] || '';
+          }
         }
+        const dt = parseTime(time);
+        out.push({ id: autoId++, name: name||'訪客', time: isNaN(dt)? new Date().toISOString(): dt.toISOString(), place, content });
       }
+      return out;
     }
+
+    async function loadData(){
+  DATA = FEEDBACKS.slice(); // 先用內建陣列
+  try{
+    const res = await fetch(remoteUrl, {cache:'no-store'});
+    const jsonData = await res.json();
+    // 合併：把 JSON 資料接在後面
+    DATA = DATA.concat(jsonData);
+  }catch(err){
+    console.error("載入 JSON 失敗，僅使用內建資料", err);
+  }
+  afterLoad();
+}
+
 
     function afterLoad(){
       DATA = DATA.map((x,i)=>({
@@ -241,11 +295,9 @@
       populatePlaceFilter(DATA);
       render();
     }
- 
+
     attachEvents();
     loadData();
   </script>
 </body>
 </html>
-
-
